@@ -18,6 +18,3 @@ This project will not properly install anything on your system, all the files an
 1. `<application-path> --help` display usage help.
 
 Tested on Debian. As there are many distros for linux, I will appreciate feedback from other users.
-
-## Known Issues
-1. Keysupression : Sometimes the grabKeys fail to supress key events, and the key event associated with this program pass through the active window.
