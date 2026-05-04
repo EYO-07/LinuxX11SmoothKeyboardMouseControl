@@ -16,3 +16,6 @@ This project is a small project, you should always build this project from sourc
 1. `<application-path> --help` display usage help.
 
 Tested on Debian. As there are many distros for linux, I will appreciate feedback from other users.
+
+## Known Issues
+1. Keysupression : Sometimes the grabKeys fail to supress key events, and the key event associated with this program pass through the active window.
