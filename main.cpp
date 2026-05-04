@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
     Display* display = XOpenDisplay(NULL);
     Window win;
     Window dummy;
+    Window oldWin=0;
     int x = 500, y = 500; 
     int dx = 0; int dy = 0;
     int return_val = 0;
@@ -122,12 +123,12 @@ int main(int argc, char* argv[]) {
             XNextEvent(display, &ev);
             if (ev.type == DestroyNotify) {
                 window2ungrabstate.erase(ev.xdestroywindow.window);
-                std::cout << "windows has been closed ..." << std::endl;
-                std::this_thread::sleep_for(confirm_duration);
             }
         } 
         win = getActiveWindow(display);
         if (!win) goto end_main_iteration;
+        if (oldWin!=0 && win == oldWin) goto input_processing;
+    update_grab_state:
         if ( window2ungrabstate.count(win)==0 ) { 
             if (!unGrabKeys(keyList, win, display)) goto fail;
             window2ungrabstate[win] = true;
@@ -137,7 +138,7 @@ int main(int argc, char* argv[]) {
                 window2ungrabstate[win] = true;
             }
         }
-        if ( isKeyDown(SK(keyListF[10]),display) ) { 
+        if ( isKeyDown(SK(keyListF[10]),display)  ) { 
             b_control_active = !b_control_active;
             std::cout << "toggling script" << std::endl;
             std::this_thread::sleep_for(confirm_duration);
@@ -153,6 +154,7 @@ int main(int argc, char* argv[]) {
             }
             goto end_main_iteration;
         }
+    input_processing:    
         // -- mouse buttons 
         if (isKeyDown(SK(keyListF[4]), display)) {
             if (!b_lbutton_down) {
@@ -194,6 +196,7 @@ int main(int argc, char* argv[]) {
         if ( dx || dy ) mouseMove(x+dx,y+dy, display);
     end_main_iteration:
         if ( isKeyDown(SK(keyListF[9]),display) ) goto end;
+        oldWin = win;
         std::this_thread::sleep_for(sleep_duration);
     }
     goto end;
