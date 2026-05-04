@@ -10,7 +10,7 @@ Terminal command-line application for smooth keyboard mouse control using X11 li
 This is a small project, you should always build this from source.
 1. Download the project and extract it to desired folder.
 2. Read build.sh and run the script `bash build.sh`.
-3. Read example.sh and run the script `bash example.sh` to start a bash script example using numpad keys remap.
+3. Read example.sh and run the script `bash example.sh` to start a bash script example using numpad keys remap (try to toggle NumLock if the script doesn't work).
 
 This project will not properly install anything on your system, all the files and application logic is contained in the extracted folder. Create a custom bash script using the `example.sh` as a template or an alias to easily start the program.
 
