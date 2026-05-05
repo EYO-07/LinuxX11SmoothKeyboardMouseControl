@@ -1,7 +1,58 @@
+/// Grimoire : Smooth Keyboard Mouse Control { XOrg/X11, xdotool }
+/** MOPP : Magic Oriented Programming Paradigm 
 
-// 1. Fixed Flow Goto Statements : To avoid spaghetti!
-// 2. GOLEM : Logical Mapping and Manual Modelling of the Program.
-// 3. CODEX : List of Spells (Framework).
+... programming is the closest thing to magic in our world
+
+Paradigm [ Magic Oriented Programming Paradigm ] : Concept mapping between programming and magic. 
+
+Motto [ Wizards uses Magic ] : An adept of MOPP should not have aversion of new technologies, if it can make your life easy like magic, then you should master it. 
+1. MOPP is specially designed for LLM's and code generators A.I.'s 
+2. How much control you want for your project? This will dictate how you use magic.
+
+Concepts { Magic Oriented Programming Paradigm }
+1. Spellcasting : Spell is a function and casting is the use of the appropriate syntax.
+2. Oracles : Are the LLM's, a wizard should use it to craft new spells or consulting.
+3. Grimoires : list of existing spells, generaly crafted as a `cheat sheet comment block` format with aid of oracules. Grimoires can be safely handled by oracles. 
+4. Golems : the golem is the manually crafted part of code, managed primarly by humans, the golem should be as close as possible (have the form) of the project's logic. Golem could be the main file or any other file intended for this purpose.
+5. Codex : the codex are the crafted spells (framework).
+6. LLM Spellcrafting : humans design the spell (syntax) and ask for implementation for oracles.
+7. Golem Sculpting : can be or not be made by LLM's, golem sculping is the creation of dummy and placeholder classes and functions for your project, it will be the 'skeleton' of your project.
+8. Golem Infusion : is the implementation of the dummies and placeholders of your project.
+9. Golem Craft : is the programming itself, the main objective of a wizard is the golem creation, the golem is the program which is designed to do some hard work. 
+10. Divination : Oracle consulting 
+11. Library : Official Documentation, Search Engines 
+
+{ Grimoire Craft, Golem Sculpting, Spellcast, Codex Spellcraft, Golem Infusion, Divination }
+Grimoire Craft % Divination, Library
+Golem Sculpting % Divination, Library 
+Golem Infusion % Spellcast { Grimoire Spellcast, Codex Spellcast } 
+Codex % Divination, Library
+
+... once the project begins these will be the main activities for development
+... (Golem Sculpting, Codex/Grimoire Maintenance, Golem Infusion)
+
+... Every time you need to manually write a code, that is considered golem craft, so if you manually write a spell in the codex, the wizard should understand the activity as golem craft, so mentally you will perform that activity sculpting, crafting new helper spells, and performing infusion. The wizard should differentiate this from the global project organization.
+
+... (Sculpting, Spellcrafting, Infusion) is how a programmer sees the programming as a wizard.
+... (Sculpting, Infusion) is a shortcut workflow, when spellcraft isn't necessary if the spells necessary for the project is already in the codex or already in the built-in libraries from the grimoire.
+
+Workflow [ Programming ] { Magic Oriented Programming Paradigm } 
+-> Coding || Design || Dialetic | Logic | Workflow
+-> Coding || Design | Project Sculpting | & || $ Grimoire | &? || Sculpting | % || Spellcraft
+-> Coding || Design | Project Sculpting | & || $ Grimoire | &? || Sculpting | % | Infusion 
+
+*/
+/** Goto Statements Constraints:
+... used to avoid nested ifs inside functions or loops, simplify condition check, and jump to recurrent cleaning block for ending or fail.
+1. Fixed Flow Goto Statements : Always jump forward, never backwards.
+2. Goto inside simple ifs : Avoid hidden jumps using simple ifs of the form `if (CONDITION) goto LABEL;`.
+3. Label with Context : labels should have a context commentline, indicating necessary conditions for section execution. 
+*/
+
+/// Template 
+/* Inventory [] { C++ }
+1. SYNTAX // SHORTDESCRIPTION 
+*/ 
 
 // ==============================================================================================
 // runomancy : language basics 
@@ -124,25 +175,7 @@
 */
 
 // ===========================================================================================================
-// X11 
-
-/** [ Keyboard Mouse Control X11 ]
-
-Keywords
-1. GrabKey ~ Keysupress 
-2. xdotool ~ mouse control utility 
-3. libx11-dev ~ sudo apt install libx11-dev 
-.
-* How to dinamically activate key supress ? 
-
-Possible Inventories:
-1. Inventory [ X11/Xlib.h ] { C++, Linux }
-2. Inventory [ X11/Xutil.h ] { C++, Linux }
-3. Inventory [ XGrabKey ] { C++, Linux }
-4. Inventory [ XEvent ] { C++, Linux }
-5. Inventory [ XWarpPointer ] { C++, Linux }
-
-*/
+// X/XOrg/X11 
 
 /* Inventory [ X11/Xlib.h ] { C++, Linux }
 1. Display* XOpenDisplay(const char* display_name) // Open connection to X server

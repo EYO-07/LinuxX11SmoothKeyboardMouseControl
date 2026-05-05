@@ -9,10 +9,10 @@ bool b_control_active = true;
 int defaultMoveStep = 5;
 int moveStep = 5; 
 std::unordered_map<Window, bool> window2ungrabstate;
-std::vector<std::string> keyListF = {"w","a","s","d","e","q","r","f","c","F9","F12"};
-std::vector<std::string> keyList = {"w","a","s","d","e","q","r","f","c"};
+std::vector<std::string> keyListF = {"w","a","s","d","e","q","r","f","z","x","c","F9","F12"};
+std::vector<std::string> keyList = {"w","a","s","d","e","q","r","f","z","x","c"};
 auto sleep_duration = std::chrono::milliseconds(8); // (e.g., 16ms to run at ~60 FPS)
-auto confirm_duration = std::chrono::milliseconds(100); // (e.g., 16ms to run at ~60 FPS)
+auto confirm_duration = std::chrono::milliseconds(200); // (e.g., 16ms to run at ~60 FPS)
 static std::string USAGE_TEXT = R"(
 Usage: <application> [options]
 
@@ -22,6 +22,7 @@ Options:
     --wasd=<up>,<left>,<down>,<right>                               Remap Movement Keys.
     --LRUD=<left-button>,<right-button>,<scroll-up>,<scroll-down>   Remap Mouse Buttons.
     --toggles=<speed>,<exit>,<script>                               Remap for Exit and Toggles.
+    --ZX=<decrease-base-speed>,<increase-base-speed>                Remap for Increase and Decrease speed.
 )";
 // -- forward declaration || functions 
 void toggleSpeed();
@@ -31,7 +32,9 @@ std::string vec2string(std::vector<std::string> vec, int start, int len);
 int x11ErrorHandler(Display* d, XErrorEvent* e);
 bool newWindow(Window& win, Display*& display);
 void coutDisplay();
-std::string TF(bool value);
+std::string TF(bool value); // print True of False
+void increaseBaseSpeed();
+void decreaseBaseSpeed();
 // -- entry point 
 int main(int argc, char* argv[]) {
     // -- components 
@@ -53,7 +56,7 @@ int main(int argc, char* argv[]) {
         std::vector<std::string> values // comma separated 
     )->int {
         // -- single arguments 
-        if ( argument.compare("--help")==0 ) {
+        if ( argument.compare("--help")==0 || argument.compare("-h")==0 ) {
             std::cout << USAGE_TEXT << std::endl;
             return 2;
         }
@@ -95,12 +98,19 @@ int main(int argc, char* argv[]) {
             return 0;
         }
         if ( key.compare("--toggles")==0 && values.size()==3 ) {
-            int i=8;
-            keyList[8] = values[0];
+            int i=10;
+            keyList[10] = values[0];
             for (const auto& keystr: values) {
                 keyListF[i] = keystr;
                 i++;
             }
+            return 0;
+        }
+        if ( key.compare("--ZX")==0 && values.size()==2 ) {
+            keyList[8] = values[0];
+            keyList[9] = values[1];
+            keyListF[8] = values[0];
+            keyListF[9] = values[1];
             return 0;
         }
         // -- end
@@ -123,7 +133,7 @@ int main(int argc, char* argv[]) {
         win = getActiveWindow(display);
         if (!win) goto end_main_iteration;
         if (oldWin!=0 && win == oldWin) goto input_processing;
-    update_grab_state: // Section Context : b_control_active, win!=oldWin
+    update_grab_state: // Section Context : b_control_active, win!=oldWin, valid win
         if ( window2ungrabstate.count(win)==0 ) { // initialization
             if (!unGrabKeys(keyList, win, display)) goto fail;
             window2ungrabstate[win] = true;
@@ -136,7 +146,10 @@ int main(int argc, char* argv[]) {
             if( !grabKeys(keyList, win, display)) goto fail; 
             window2ungrabstate[win] = false;
         }
-    input_processing: // Section Context : b_control_active, valid keys 
+    input_processing: // Section Context : b_control_active, valid keys, valid win 
+        // -- pointer speed 
+        if ( isKeyDown(SK(keyListF[8]), display) ) decreaseBaseSpeed();
+        if ( isKeyDown(SK(keyListF[9]), display) ) increaseBaseSpeed();
         // -- mouse buttons 
         if (isKeyDown(SK(keyListF[4]), display)) { // Left Button
             if (!b_lbutton_down) {
@@ -162,7 +175,7 @@ int main(int argc, char* argv[]) {
         }
         if ( isKeyDown(SK(keyListF[6]), display) ) mouseScrollUp();
         if ( isKeyDown(SK(keyListF[7]), display) ) mouseScrollDown();
-        if ( isKeyDown(SK(keyListF[8]), display) ) toggleSpeed();
+        if ( isKeyDown(SK(keyListF[10]), display) ) toggleSpeed();
         // -- mouse movement 
         dx = 0; dy = 0;
         getMouseXY(x,y);
@@ -173,8 +186,8 @@ int main(int argc, char* argv[]) {
         if ( dx || dy ) mouseMove(x+dx,y+dy, display);
     end_main_iteration: // Section Context : valid keys 
         // -- always active keys || exit | toggle script 
-        if ( isKeyDown(SK(keyListF[9]),display) ) goto end;
-        if ( isKeyDown(SK(keyListF[10]),display)  ) toggleScript(display);
+        if ( isKeyDown(SK(keyListF[11]),display) ) goto end;
+        if ( isKeyDown(SK(keyListF[12]),display)  ) toggleScript(display);
         oldWin = win;
         std::this_thread::sleep_for(sleep_duration);
     }
@@ -282,13 +295,27 @@ void coutDisplay() {
     std::cout << "Smooth Keyboard Mouse Control { XOrg/X11, xdotool }" << std::endl;
     std::cout << "- speed : " << moveStep << "/" << defaultMoveStep << std::endl;
     std::cout << "- active : " << TF(b_control_active) << std::endl;
-    std::cout << "1. " << keyListF[9] << " - Exit" << std::endl;
-    std::cout << "2. " << keyListF[10] << " - Toggle Key Capture" << std::endl;
+    std::cout << "1. " << keyListF[11] << " - Exit" << std::endl;
+    std::cout << "2. " << keyListF[12] << " - Toggle Key Capture" << std::endl;
     std::cout << "3. " << vec2string(keyList,0,4) << " - Movement" << std::endl;
     std::cout << "4. " << vec2string(keyList,4,2) << " - Left/Right Buttons" << std::endl;
     std::cout << "5. " << vec2string(keyList,6,2) << " - Scrolling" << std::endl;
-    std::cout << "6. " << keyList[8] << " - Toggle Speed" << std::endl;
+    std::cout << "6. " << keyList[10] << " - Toggle Speed" << std::endl;
+    std::cout << "7. " << vec2string(keyList,8,2) << " - Decrease/Increase Base Speed" << std::endl;
     std::cout << std::endl;
+}
+void increaseBaseSpeed() {
+    defaultMoveStep++;
+    moveStep = defaultMoveStep;
+    std::this_thread::sleep_for(confirm_duration);
+    coutDisplay();
+}
+void decreaseBaseSpeed() {
+    if (defaultMoveStep<=1) return;
+    defaultMoveStep--;
+    moveStep = defaultMoveStep;
+    std::this_thread::sleep_for(confirm_duration);
+    coutDisplay();
 }
 
 /// END GOLEM X11KMC

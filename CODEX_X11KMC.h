@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <functional>
 
-bool newWindow(Window& win, Display*& display);
 bool grabKeys(const std::vector<std::string>& list, Window& win, Display* display);
 bool unGrabKeys(const std::vector<std::string>& list, Window& win, Display* display);
 bool getKeypress(KeySym& key,Display* display);
