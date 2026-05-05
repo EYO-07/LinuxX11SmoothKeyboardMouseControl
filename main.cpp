@@ -5,6 +5,7 @@
 #include <thread> // For sleep functionality
 #include <chrono> // For duration
 // -- variables 
+bool b_control_active = true;
 int defaultMoveStep = 5;
 int moveStep = 5; 
 std::unordered_map<Window, bool> window2ungrabstate;
@@ -24,12 +25,14 @@ Options:
 )";
 // -- forward declaration || functions 
 void toggleSpeed();
+void toggleScript(Display* display);
 void cleanUp(Display* display);
 std::string vec2string(std::vector<std::string> vec, int start, int len);
 int x11ErrorHandler(Display* d, XErrorEvent* e);
 bool newWindow(Window& win, Display*& display);
-
-// 
+void coutDisplay();
+std::string TF(bool value);
+// -- entry point 
 int main(int argc, char* argv[]) {
     // -- components 
     Display* display = XOpenDisplay(NULL);
@@ -39,7 +42,6 @@ int main(int argc, char* argv[]) {
     int x = 500, y = 500; 
     int dx = 0; int dy = 0;
     int return_val = 0;
-    bool b_control_active = true;
     bool b_lbutton_down = false;
     bool b_rbutton_down = false;
     // -- commandline arguments 
@@ -105,15 +107,7 @@ int main(int argc, char* argv[]) {
         return 0; // continue 
     })==2 ) goto end;
     // -- logic 
-    std::cout << std::endl;
-    std::cout << "Smooth Keyboard Mouse Control { XOrg/X11, xdotool }" << std::endl;
-    std::cout << "1. " << keyListF[9] << " - Exit" << std::endl;
-    std::cout << "2. " << keyListF[10] << " - Toggle Key Capture" << std::endl;
-    std::cout << "3. " << vec2string(keyList,0,4) << " - Movement" << std::endl;
-    std::cout << "4. " << vec2string(keyList,4,2) << " - Left/Right Buttons" << std::endl;
-    std::cout << "5. " << vec2string(keyList,6,2) << " - Scrolling" << std::endl;
-    std::cout << "6. " << keyList[8] << " - Toggle Speed" << std::endl;
-    std::cout << std::endl;
+    coutDisplay();
     newWindow(dummy,display);
     if (!dummy) goto fail;
     if (!display) goto fail;
@@ -125,38 +119,26 @@ int main(int argc, char* argv[]) {
                 window2ungrabstate.erase(ev.xdestroywindow.window);
             }
         } 
+        if (!b_control_active) goto end_main_iteration;
         win = getActiveWindow(display);
         if (!win) goto end_main_iteration;
         if (oldWin!=0 && win == oldWin) goto input_processing;
-    update_grab_state:
-        if ( window2ungrabstate.count(win)==0 ) { 
+    update_grab_state: // Section Context : b_control_active, win!=oldWin
+        if ( window2ungrabstate.count(win)==0 ) { // initialization
             if (!unGrabKeys(keyList, win, display)) goto fail;
             window2ungrabstate[win] = true;
-        } else if ( window2ungrabstate.count(win)>0 ) {
-            if ( !window2ungrabstate[win] ) { 
-                if (!unGrabKeys(keyList, win, display)) goto fail;
-                window2ungrabstate[win] = true;
-            }
         }
-        if ( isKeyDown(SK(keyListF[10]),display)  ) { 
-            b_control_active = !b_control_active;
-            std::cout << "toggling script" << std::endl;
-            std::this_thread::sleep_for(confirm_duration);
-            std::cout << "script active : " << b_control_active << std::endl;
+        if ( oldWin!=0 && window2ungrabstate.count(oldWin)>0 ) { // ungrab keys for old win 
+            if (!unGrabKeys(keyList, oldWin, display)) goto fail;
+            window2ungrabstate[oldWin] = true;
         }
-        if ( b_control_active && window2ungrabstate[win] ) {
+        if ( window2ungrabstate[win] ) { // grab keys for current window if ungrabbed
             if( !grabKeys(keyList, win, display)) goto fail; 
             window2ungrabstate[win] = false;
-        } else {
-            if ( !window2ungrabstate[win] ) {
-                if ( !unGrabKeys(keyList, win, display)) goto fail;
-                window2ungrabstate[win] = true;
-            }
-            goto end_main_iteration;
         }
-    input_processing:    
+    input_processing: // Section Context : b_control_active, valid keys 
         // -- mouse buttons 
-        if (isKeyDown(SK(keyListF[4]), display)) {
+        if (isKeyDown(SK(keyListF[4]), display)) { // Left Button
             if (!b_lbutton_down) {
                 mouseLButtonDown();
                 b_lbutton_down = true;
@@ -167,7 +149,7 @@ int main(int argc, char* argv[]) {
                 b_lbutton_down = false;
             }
         }
-        if (isKeyDown(SK(keyListF[5]), display)) {
+        if (isKeyDown(SK(keyListF[5]), display)) { // Right Button 
             if (!b_rbutton_down) {
                 mouseRButtonDown();
                 b_rbutton_down = true;
@@ -180,12 +162,7 @@ int main(int argc, char* argv[]) {
         }
         if ( isKeyDown(SK(keyListF[6]), display) ) mouseScrollUp();
         if ( isKeyDown(SK(keyListF[7]), display) ) mouseScrollDown();
-        if ( isKeyDown(SK(keyListF[8]), display) ) { 
-            std::cout << "toggling speed" << std::endl;
-            toggleSpeed();
-            std::this_thread::sleep_for(confirm_duration);
-            std::cout << "speed toggled" << std::endl;
-        }
+        if ( isKeyDown(SK(keyListF[8]), display) ) toggleSpeed();
         // -- mouse movement 
         dx = 0; dy = 0;
         getMouseXY(x,y);
@@ -194,8 +171,10 @@ int main(int argc, char* argv[]) {
         if ( isKeyDown(SK(keyListF[2]),display) ) dy = +moveStep;     
         if ( isKeyDown(SK(keyListF[3]),display) ) dx = +moveStep;
         if ( dx || dy ) mouseMove(x+dx,y+dy, display);
-    end_main_iteration:
+    end_main_iteration: // Section Context : valid keys 
+        // -- always active keys || exit | toggle script 
         if ( isKeyDown(SK(keyListF[9]),display) ) goto end;
+        if ( isKeyDown(SK(keyListF[10]),display)  ) toggleScript(display);
         oldWin = win;
         std::this_thread::sleep_for(sleep_duration);
     }
@@ -206,7 +185,6 @@ end:
     cleanUp(display);
     return return_val;
 }
-
 // -- implementations 
 void toggleSpeed() {
     if ( moveStep == defaultMoveStep ) {
@@ -214,6 +192,37 @@ void toggleSpeed() {
     } else {
         moveStep = defaultMoveStep;
     }
+    std::this_thread::sleep_for(confirm_duration);
+    coutDisplay();
+}
+void toggleScript(Display* display) {
+    // -- toggle 
+    b_control_active = !b_control_active;
+    // -- update 
+    if (b_control_active) {
+        Window win = getActiveWindow(display);
+        if ( window2ungrabstate.count(win)==0 ) { // initialization
+            unGrabKeys(keyList, win, display);
+            window2ungrabstate[win] = true;
+        }
+        if ( window2ungrabstate[win] ) { // grab keys for current window if ungrabbed
+            grabKeys(keyList, win, display); 
+            window2ungrabstate[win] = false;
+        }
+    } else {
+        mouseRButtonUp();
+        mouseLButtonUp();    
+        for(const auto& [w, b] : window2ungrabstate) {
+            bool b_ungrab = b;
+            if (b) continue; 
+            Window win = w;
+            unGrabKeys(keyListF,win, display);
+            window2ungrabstate[win] = true;
+        }
+    }
+end_toggle:
+    std::this_thread::sleep_for(confirm_duration);
+    coutDisplay();
 }
 void cleanUp(Display* display) {
     mouseRButtonUp();
@@ -262,6 +271,24 @@ bool newWindow(Window& win, Display*& display) {
 fail:
     std::cerr << "Error opening X display or creating window!" << std::endl;
     return false;
+}
+std::string TF(bool value) {
+    if (value) return "True";
+    return "False";
+}
+void coutDisplay() {
+    std::system("clear");
+    std::cout << std::endl;
+    std::cout << "Smooth Keyboard Mouse Control { XOrg/X11, xdotool }" << std::endl;
+    std::cout << "- speed : " << moveStep << "/" << defaultMoveStep << std::endl;
+    std::cout << "- active : " << TF(b_control_active) << std::endl;
+    std::cout << "1. " << keyListF[9] << " - Exit" << std::endl;
+    std::cout << "2. " << keyListF[10] << " - Toggle Key Capture" << std::endl;
+    std::cout << "3. " << vec2string(keyList,0,4) << " - Movement" << std::endl;
+    std::cout << "4. " << vec2string(keyList,4,2) << " - Left/Right Buttons" << std::endl;
+    std::cout << "5. " << vec2string(keyList,6,2) << " - Scrolling" << std::endl;
+    std::cout << "6. " << keyList[8] << " - Toggle Speed" << std::endl;
+    std::cout << std::endl;
 }
 
 /// END GOLEM X11KMC
