@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <vector>
 #include <string>
-// #include <X11/XKBlib.h>  // Include XKB for XkbKeycodeToKeysym
+#include <X11/XKBlib.h>  // Include XKB for XkbKeycodeToKeysym
 #include <X11/keysym.h>
 #include <cstdlib>  // For system() function
 #include <unordered_map>
@@ -14,6 +14,8 @@
 
 bool grabKeys(const std::vector<std::string>& list, Window& win, Display* display);
 bool unGrabKeys(const std::vector<std::string>& list, Window& win, Display* display);
+bool grabKeys(const std::unordered_map<std::string,std::string>& map, Window& win, Display* display);
+bool unGrabKeys(const std::unordered_map<std::string,std::string>& map, Window& win, Display* display);
 bool getKeypress(KeySym& key,Display* display);
 void mouseMove(int x, int y, Display* display);
 bool getMouseXY(int& x, int& y);

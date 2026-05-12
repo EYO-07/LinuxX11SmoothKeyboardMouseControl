@@ -9,9 +9,8 @@ bool b_control_active = true;
 int defaultMoveStep = 5;
 int moveStep = 5; 
 std::unordered_map<Window, bool> window2ungrabstate;
-std::vector<std::string> keyListF = {"w","a","s","d","e","q","r","f","z","x","c","F9","F12"};
-std::vector<std::string> keyList = {"w","a","s","d","e","q","r","f","z","x","c"};
-auto sleep_duration = std::chrono::milliseconds(8); // (e.g., 16ms to run at ~60 FPS)
+std::unordered_map<std::string, std::string> keyRemap;
+auto sleep_duration = std::chrono::milliseconds(20); // (e.g., 16ms to run at ~60 FPS)
 auto confirm_duration = std::chrono::milliseconds(200); // (e.g., 16ms to run at ~60 FPS)
 static std::string USAGE_TEXT = R"(
 Usage: <application> [options]
@@ -35,6 +34,7 @@ void coutDisplay();
 std::string TF(bool value); // print True of False
 void increaseBaseSpeed();
 void decreaseBaseSpeed();
+void initKeyRemap();
 // -- entry point 
 int main(int argc, char* argv[]) {
     // -- components 
@@ -47,6 +47,7 @@ int main(int argc, char* argv[]) {
     int return_val = 0;
     bool b_lbutton_down = false;
     bool b_rbutton_down = false;
+    initKeyRemap();
     // -- commandline arguments 
     if ( CodexIncantation::foreachCommandLineArgument(argc,argv,[](
         std::string argument, 
@@ -80,37 +81,28 @@ int main(int argc, char* argv[]) {
         // -- composed values 
         if ( values.size()<=1 ) return 0;
         if ( key.compare("--wasd")==0 && values.size()==4 ) {
-            int i=0;
-            for (const auto& keystr: values) {
-                keyList[i] = keystr;
-                keyListF[i] = keystr;
-                i++;
-            }
+            keyRemap["w"] = values[0];
+            keyRemap["a"] = values[1];
+            keyRemap["s"] = values[2];
+            keyRemap["d"] = values[3];
             return 0;
         }
         if ( key.compare("--LRUD")==0 && values.size()==4 ) {
-            int i=4;
-            for (const auto& keystr: values) {
-                keyList[i] = keystr;
-                keyListF[i] = keystr;
-                i++;
-            }
+            keyRemap["e"] = values[0];
+            keyRemap["q"] = values[1];
+            keyRemap["r"] = values[2];
+            keyRemap["f"] = values[3];
             return 0;
         }
         if ( key.compare("--toggles")==0 && values.size()==3 ) {
-            int i=10;
-            keyList[10] = values[0];
-            for (const auto& keystr: values) {
-                keyListF[i] = keystr;
-                i++;
-            }
+            keyRemap["c"] = values[0];
+            keyRemap["F9"] = values[1];
+            keyRemap["F12"] = values[2];
             return 0;
         }
         if ( key.compare("--ZX")==0 && values.size()==2 ) {
-            keyList[8] = values[0];
-            keyList[9] = values[1];
-            keyListF[8] = values[0];
-            keyListF[9] = values[1];
+            keyRemap["z"] = values[0];
+            keyRemap["x"] = values[1];            
             return 0;
         }
         // -- end
@@ -135,26 +127,27 @@ int main(int argc, char* argv[]) {
         if (oldWin!=0 && win == oldWin) goto input_processing;
     update_grab_state: // Section Context : b_control_active, win!=oldWin, valid win
         if ( window2ungrabstate.count(win)==0 ) { // initialization
-            if (!unGrabKeys(keyList, win, display)) goto fail;
+            if (!unGrabKeys(keyRemap, win, display)) goto fail;
             window2ungrabstate[win] = true;
         }
         if ( oldWin!=0 && window2ungrabstate.count(oldWin)>0 ) { // ungrab keys for old win 
-            if (!unGrabKeys(keyList, oldWin, display)) goto fail;
+            if (!unGrabKeys(keyRemap, oldWin, display)) goto fail;
             window2ungrabstate[oldWin] = true;
         }
         if ( window2ungrabstate[win] ) { // grab keys for current window if ungrabbed
-            if( !grabKeys(keyList, win, display)) goto fail; 
+            if( !grabKeys(keyRemap, win, display)) goto fail; 
             window2ungrabstate[win] = false;
         }
     input_processing: // Section Context : b_control_active, valid keys, valid win 
         // -- pointer speed 
-        if ( isKeyDown(SK(keyListF[8]), display) ) decreaseBaseSpeed();
-        if ( isKeyDown(SK(keyListF[9]), display) ) increaseBaseSpeed();
+        if ( isKeyDown(SK(keyRemap.at("z")), display) ) decreaseBaseSpeed();
+        if ( isKeyDown(SK(keyRemap.at("x")), display) ) increaseBaseSpeed();
         // -- mouse buttons 
-        if (isKeyDown(SK(keyListF[4]), display)) { // Left Button
+        if (isKeyDown(SK(keyRemap.at("e")), display)) { // Left Button
             if (!b_lbutton_down) {
                 mouseLButtonDown();
                 b_lbutton_down = true;
+                goto end_main_iteration_no_sleep;
             }
         } else {
             if (b_lbutton_down) {
@@ -162,10 +155,11 @@ int main(int argc, char* argv[]) {
                 b_lbutton_down = false;
             }
         }
-        if (isKeyDown(SK(keyListF[5]), display)) { // Right Button 
+        if (isKeyDown(SK(keyRemap.at("q")), display)) { // Right Button 
             if (!b_rbutton_down) {
                 mouseRButtonDown();
                 b_rbutton_down = true;
+                goto end_main_iteration_no_sleep;
             }
         } else {
             if (b_rbutton_down) {
@@ -173,23 +167,29 @@ int main(int argc, char* argv[]) {
                 b_rbutton_down = false;
             }
         }
-        if ( isKeyDown(SK(keyListF[6]), display) ) mouseScrollUp();
-        if ( isKeyDown(SK(keyListF[7]), display) ) mouseScrollDown();
-        if ( isKeyDown(SK(keyListF[10]), display) ) toggleSpeed();
+        if ( isKeyDown(SK(keyRemap.at("r")), display) ) mouseScrollUp();
+        if ( isKeyDown(SK(keyRemap.at("f")), display) ) mouseScrollDown();
+        if ( isKeyDown(SK(keyRemap.at("c")), display) ) toggleSpeed();
         // -- mouse movement 
         dx = 0; dy = 0;
         getMouseXY(x,y);
-        if ( isKeyDown(SK(keyListF[0]),display) ) dy = -moveStep;
-        if ( isKeyDown(SK(keyListF[1]),display) ) dx = -moveStep; 
-        if ( isKeyDown(SK(keyListF[2]),display) ) dy = +moveStep;     
-        if ( isKeyDown(SK(keyListF[3]),display) ) dx = +moveStep;
+        if ( isKeyDown(SK(keyRemap.at("w")),display) ) dy = -moveStep;
+        if ( isKeyDown(SK(keyRemap.at("a")),display) ) dx = -moveStep; 
+        if ( isKeyDown(SK(keyRemap.at("s")),display) ) dy = +moveStep;     
+        if ( isKeyDown(SK(keyRemap.at("d")),display) ) dx = +moveStep;
         if ( dx || dy ) mouseMove(x+dx,y+dy, display);
     end_main_iteration: // Section Context : valid keys 
         // -- always active keys || exit | toggle script 
-        if ( isKeyDown(SK(keyListF[11]),display) ) goto end;
-        if ( isKeyDown(SK(keyListF[12]),display)  ) toggleScript(display);
+        if ( isKeyDown(SK(keyRemap.at("F9")),display) ) goto end;
+        if ( isKeyDown(SK(keyRemap.at("F12")),display) ) toggleScript(display);
         oldWin = win;
         std::this_thread::sleep_for(sleep_duration);
+        continue;
+    end_main_iteration_no_sleep:
+        if ( isKeyDown(SK(keyRemap.at("F9")),display) ) goto end;
+        if ( isKeyDown(SK(keyRemap.at("F12")),display) ) toggleScript(display);
+        oldWin = win;
+        continue;
     }
     goto end;
 fail:
@@ -215,11 +215,11 @@ void toggleScript(Display* display) {
     if (b_control_active) {
         Window win = getActiveWindow(display);
         if ( window2ungrabstate.count(win)==0 ) { // initialization
-            unGrabKeys(keyList, win, display);
+            unGrabKeys(keyRemap, win, display);
             window2ungrabstate[win] = true;
         }
         if ( window2ungrabstate[win] ) { // grab keys for current window if ungrabbed
-            grabKeys(keyList, win, display); 
+            grabKeys(keyRemap, win, display); 
             window2ungrabstate[win] = false;
         }
     } else {
@@ -229,7 +229,7 @@ void toggleScript(Display* display) {
             bool b_ungrab = b;
             if (b) continue; 
             Window win = w;
-            unGrabKeys(keyListF,win, display);
+            unGrabKeys(keyRemap,win, display);
             window2ungrabstate[win] = true;
         }
     }
@@ -244,11 +244,13 @@ void cleanUp(Display* display) {
         bool b_ungrab = b;
         if (b) continue; 
         Window win = w;
-        unGrabKeys(keyListF,win, display);
+        unGrabKeys(keyRemap,win, display);
         window2ungrabstate[win] = true;
     }
     XCloseDisplay(display);
 }
+
+/*
 std::string vec2string(std::vector<std::string> vec, int start, int len) {
     std::string result = "";
     int index = 0;
@@ -265,6 +267,8 @@ std::string vec2string(std::vector<std::string> vec, int start, int len) {
     }
     return result;
 }
+*/
+
 int x11ErrorHandler(Display* d, XErrorEvent* e) {
     // ignore BadWindow safely
     if (e->error_code == BadWindow) return 0;
@@ -295,13 +299,13 @@ void coutDisplay() {
     std::cout << "Smooth Keyboard Mouse Control { XOrg/X11, xdotool }" << std::endl;
     std::cout << "- speed : " << moveStep << "/" << defaultMoveStep << std::endl;
     std::cout << "- active : " << TF(b_control_active) << std::endl;
-    std::cout << "1. " << keyListF[11] << " - Exit" << std::endl;
-    std::cout << "2. " << keyListF[12] << " - Toggle Key Capture" << std::endl;
-    std::cout << "3. " << vec2string(keyList,0,4) << " - Movement" << std::endl;
-    std::cout << "4. " << vec2string(keyList,4,2) << " - Left/Right Buttons" << std::endl;
-    std::cout << "5. " << vec2string(keyList,6,2) << " - Scrolling" << std::endl;
-    std::cout << "6. " << keyList[10] << " - Toggle Speed" << std::endl;
-    std::cout << "7. " << vec2string(keyList,8,2) << " - Decrease/Increase Base Speed" << std::endl;
+    std::cout << "1. " << keyRemap["F9"] << " - Exit" << std::endl;
+    std::cout << "2. " << keyRemap["F12"] << " - Toggle Key Capture" << std::endl;
+    std::cout << "3. " << keyRemap["w"] << ", " << keyRemap["a"] << ", " << keyRemap["s"] << ", " << keyRemap["d"] << " - Movement" << std::endl;
+    std::cout << "4. " << keyRemap["e"] << ", " << keyRemap["q"] << " - Left/Right Buttons" << std::endl;
+    std::cout << "5. " << keyRemap["r"] << ", " << keyRemap["f"] << " - Scrolling" << std::endl;
+    std::cout << "6. " << keyRemap["c"] << " - Toggle Speed" << std::endl;
+    std::cout << "7. " << keyRemap["z"] << ", " << keyRemap["x"] << " - Decrease/Increase Base Speed" << std::endl;
     std::cout << std::endl;
 }
 void increaseBaseSpeed() {
@@ -317,6 +321,48 @@ void decreaseBaseSpeed() {
     std::this_thread::sleep_for(confirm_duration);
     coutDisplay();
 }
+void initKeyRemap() {
+    // movement 
+    keyRemap["w"] = "w";
+    keyRemap["a"] = "a";
+    keyRemap["s"] = "s";
+    keyRemap["d"] = "d";
+    // mouse buttons 
+    keyRemap["e"] = "e";
+    keyRemap["q"] = "q";
+    // mouse scrolling 
+    keyRemap["r"] = "r";
+    keyRemap["f"] = "f";
+    // mouse speed 
+    keyRemap["z"] = "z"; // decrease mouse base speed 
+    keyRemap["x"] = "x"; // increase mouse base speed 
+    keyRemap["c"] = "c"; // toggle speed
+    // special buttons 
+    keyRemap["F9"] = "F9"; // quit 
+    keyRemap["F12"] = "F12"; // script toggle 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /// END GOLEM X11KMC
 

@@ -1,5 +1,6 @@
 #include "CODEX_X11KMC.h"
 
+/*
 bool grabKeys(const std::vector<std::string>& list, Window& win, Display* display) {
     for(const auto& key: list) {
         KeySym keySym = XStringToKeysym(key.c_str());
@@ -32,12 +33,50 @@ bool unGrabKeys(const std::vector<std::string>& list, Window& win, Display* disp
     }
     return true;
 }
+*/
+
+bool grabKeys(const std::unordered_map<std::string,std::string>& remap, Window& win, Display* display) {
+    for(auto& [key, value] : remap) {
+        KeySym keySym = XStringToKeysym(value.c_str());
+        if (keySym == NoSymbol) { 
+            std::cout << "Warning : NoSymbol for : " << value << std::endl;
+            return false; 
+        }
+        KeyCode keyCode = XKeysymToKeycode(display, keySym);
+        XGrabKey(
+            display, 
+            keyCode, 
+            AnyModifier, 
+            win, 
+            True, 
+            GrabModeAsync, 
+            GrabModeAsync
+        );
+    }
+    return true;
+}
+bool unGrabKeys(const std::unordered_map<std::string,std::string>& remap, Window& win, Display* display) {
+    for(auto& [key, value] : remap) {
+        KeySym keySym = XStringToKeysym(value.c_str());
+        if (keySym == NoSymbol) {
+            std::cout << "Warning : NoSymbol for : " << value << std::endl;
+            return false;
+        }    
+        KeyCode keyCode = XKeysymToKeycode(display, keySym);
+        XUngrabKey(display,keyCode, AnyModifier, win);
+    }
+    return true;
+}
 bool getKeypress(KeySym& key,Display* display) {
     XEvent event;
     if (XPending(display) > 0) {
         XNextEvent(display, &event);
         if (event.type == KeyPress) {
-            key = XKeycodeToKeysym(display, event.xkey.keycode, 0);
+            //key = XKeycodeToKeysym(display, event.xkey.keycode, 0);
+            key = XkbKeycodeToKeysym(
+                display, event.xkey.keycode, 0, 
+                (event.xkey.state & ShiftMask) ? 1 : 0
+            );
             return true;
         }
     }
