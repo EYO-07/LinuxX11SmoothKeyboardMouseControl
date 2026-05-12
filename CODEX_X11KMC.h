@@ -25,6 +25,7 @@ void mouseLButtonDown();
 void mouseLButtonUp();
 void mouseRButtonDown();
 void mouseRButtonUp();
+void mouseMButton();
 void mouseScrollDown();
 void mouseScrollUp();
 KeySym SK(std::string);

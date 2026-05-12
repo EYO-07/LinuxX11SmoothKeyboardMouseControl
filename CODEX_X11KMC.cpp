@@ -156,6 +156,9 @@ void mouseScrollUp() {
 KeySym SK(std::string key) {
     return XStringToKeysym(key.c_str());
 }
+void mouseMButton() {
+    system("xdotool click 2"); 
+}
 
 // Transmutation
 std::vector<std::string> CodexTransmutation::split(const std::string& input, char delimiter) {

@@ -2,4 +2,5 @@
     --wasd=KP_5,KP_1,KP_2,KP_3 \
     --LRUD=KP_4,KP_6,KP_Enter,KP_0 \
     --toggles=KP_8,KP_9,KP_7 \
-    --ZX=KP_Divide,KP_Multiply
+    --ZX=KP_Divide,KP_Multiply \
+    --middle=KP_Decimal

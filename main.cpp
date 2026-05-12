@@ -22,6 +22,7 @@ Options:
     --LRUD=<left-button>,<right-button>,<scroll-up>,<scroll-down>   Remap Mouse Buttons.
     --toggles=<speed>,<exit>,<script>                               Remap for Exit and Toggles.
     --ZX=<decrease-base-speed>,<increase-base-speed>                Remap for Increase and Decrease speed.
+    --middle=<middle-button>                                        Remap for Mouse Middle Button.
 )";
 // -- forward declaration || functions 
 void toggleSpeed();
@@ -76,6 +77,12 @@ int main(int argc, char* argv[]) {
                 defaultMoveStep = speed_int;
                 moveStep = speed_int;
             }
+            return 0;
+        }
+        if ( key.compare("--middle")==0 ) {
+            if ( value.empty() ) return 0;
+            if (values.size()>0) return 0;
+            keyRemap["b"] = value;
             return 0;
         }
         // -- composed values 
@@ -170,6 +177,7 @@ int main(int argc, char* argv[]) {
         if ( isKeyDown(SK(keyRemap.at("r")), display) ) mouseScrollUp();
         if ( isKeyDown(SK(keyRemap.at("f")), display) ) mouseScrollDown();
         if ( isKeyDown(SK(keyRemap.at("c")), display) ) toggleSpeed();
+        if ( isKeyDown(SK(keyRemap.at("b")), display) ) mouseMButton();
         // -- mouse movement 
         dx = 0; dy = 0;
         getMouseXY(x,y);
@@ -302,7 +310,7 @@ void coutDisplay() {
     std::cout << "1. " << keyRemap["F9"] << " - Exit" << std::endl;
     std::cout << "2. " << keyRemap["F12"] << " - Toggle Key Capture" << std::endl;
     std::cout << "3. " << keyRemap["w"] << ", " << keyRemap["a"] << ", " << keyRemap["s"] << ", " << keyRemap["d"] << " - Movement" << std::endl;
-    std::cout << "4. " << keyRemap["e"] << ", " << keyRemap["q"] << " - Left/Right Buttons" << std::endl;
+    std::cout << "4. " << keyRemap["e"] << ", " << keyRemap["b"] << ", " << keyRemap["q"] << " - Left/Middle/Right Buttons" << std::endl;
     std::cout << "5. " << keyRemap["r"] << ", " << keyRemap["f"] << " - Scrolling" << std::endl;
     std::cout << "6. " << keyRemap["c"] << " - Toggle Speed" << std::endl;
     std::cout << "7. " << keyRemap["z"] << ", " << keyRemap["x"] << " - Decrease/Increase Base Speed" << std::endl;
@@ -330,6 +338,7 @@ void initKeyRemap() {
     // mouse buttons 
     keyRemap["e"] = "e";
     keyRemap["q"] = "q";
+    keyRemap["b"] = "b"; // middle click
     // mouse scrolling 
     keyRemap["r"] = "r";
     keyRemap["f"] = "f";
