@@ -1,40 +1,5 @@
 #include "CODEX_X11KMC.h"
 
-/*
-bool grabKeys(const std::vector<std::string>& list, Window& win, Display* display) {
-    for(const auto& key: list) {
-        KeySym keySym = XStringToKeysym(key.c_str());
-        if (keySym == NoSymbol) { 
-            std::cout << "Warning : NoSymbol for : " << key << std::endl;
-            return false; 
-        }
-        KeyCode keyCode = XKeysymToKeycode(display, keySym);
-        XGrabKey(
-            display, 
-            keyCode, 
-            AnyModifier, 
-            win, 
-            True, 
-            GrabModeAsync, 
-            GrabModeAsync
-        );
-    }
-    return true;
-}
-bool unGrabKeys(const std::vector<std::string>& list, Window& win, Display* display) {
-    for(const auto& key: list) {
-        KeySym keySym = XStringToKeysym(key.c_str());
-        if (keySym == NoSymbol) {
-            std::cout << "Warning : NoSymbol for : " << key << std::endl;
-            return false;
-        }    
-        KeyCode keyCode = XKeysymToKeycode(display, keySym);
-        XUngrabKey(display,keyCode, AnyModifier, win);
-    }
-    return true;
-}
-*/
-
 bool grabKeys(const std::unordered_map<std::string,std::string>& remap, Window& win, Display* display) {
     for(auto& [key, value] : remap) {
         KeySym keySym = XStringToKeysym(value.c_str());
@@ -136,13 +101,13 @@ Window getActiveWindow(Display *display) {
     return focusedWindow; // Return the window that has focus
 }
 void mouseLButtonDown() {
-    system("xdotool mousedown 1");  // Button 1 is left button
+    system("sleep 0.1 && xdotool mousedown 1");  // Button 1 is left button
 }
 void mouseLButtonUp() {
     system("xdotool mouseup 1");  // Button 1 is left button
 }
 void mouseRButtonDown() {
-    system("xdotool mousedown 3");  // Button 3 is right button
+    system("sleep 0.1 && xdotool mousedown 3");  // Button 3 is right button
 }
 void mouseRButtonUp() {
     system("xdotool mouseup 3");  // Button 3 is right button

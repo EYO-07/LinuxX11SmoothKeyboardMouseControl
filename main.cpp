@@ -257,26 +257,6 @@ void cleanUp(Display* display) {
     }
     XCloseDisplay(display);
 }
-
-/*
-std::string vec2string(std::vector<std::string> vec, int start, int len) {
-    std::string result = "";
-    int index = 0;
-    int count = 0;
-    for(const auto& item:vec){
-        if (count>=len) break;
-        if (index<start) { 
-            index++;
-            continue;
-        }
-        result.append(item+",");
-        index++;
-        count++;
-    }
-    return result;
-}
-*/
-
 int x11ErrorHandler(Display* d, XErrorEvent* e) {
     // ignore BadWindow safely
     if (e->error_code == BadWindow) return 0;
