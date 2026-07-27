@@ -1,17 +1,22 @@
 /// BEGIN GOLEM X11KMC
 
+// {TextMarker|yellow:globalGrab,globalUngrab}
+
 // -- preprocessor directives 
 #include "CODEX_X11KMC.h"
 #include <thread> // For sleep functionality
 #include <chrono> // For duration
+using namespace CodexIncantation;
 // -- variables 
 bool b_control_active = true;
 int defaultMoveStep = 5;
 int moveStep = 5; 
 std::unordered_map<Window, bool> window2ungrabstate;
+//bool b_is_grabbed;
 std::unordered_map<std::string, std::string> keyRemap;
 auto sleep_duration = std::chrono::milliseconds(20); // (e.g., 16ms to run at ~60 FPS)
 auto confirm_duration = std::chrono::milliseconds(200); // (e.g., 16ms to run at ~60 FPS)
+static std::string VERSION="2026-07-27_0355";
 static std::string USAGE_TEXT = R"(
 Usage: <application> [options]
 
@@ -60,6 +65,10 @@ int main(int argc, char* argv[]) {
         // -- single arguments 
         if ( argument.compare("--help")==0 || argument.compare("-h")==0 ) {
             std::cout << USAGE_TEXT << std::endl;
+            return 2;
+        }
+        if ( argument.compare("--version")==0 || argument.compare("-v")==0 ) {
+            std::cout << VERSION << std::endl;
             return 2;
         }
         // -- composed arguments 
@@ -247,7 +256,7 @@ end_toggle:
 }
 void cleanUp(Display* display) {
     mouseRButtonUp();
-    mouseLButtonUp();    
+    mouseLButtonUp();
     for(const auto& [w, b] : window2ungrabstate) {
         bool b_ungrab = b;
         if (b) continue; 
@@ -255,6 +264,7 @@ void cleanUp(Display* display) {
         unGrabKeys(keyRemap,win, display);
         window2ungrabstate[win] = true;
     }
+    //CodexIncantation::globalUngrab(keyRemap,display);
     XCloseDisplay(display);
 }
 int x11ErrorHandler(Display* d, XErrorEvent* e) {
